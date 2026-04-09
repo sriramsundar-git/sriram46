@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Login — VoiceOrder</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',sans-serif;background:#f5f0ea;min-height:100vh;
+         display:flex;align-items:center;justify-content:center;}
+    .login-card{background:white;border-radius:20px;padding:44px 40px;
+                width:400px;max-width:95vw;box-shadow:0 8px 40px rgba(0,0,0,0.12);}
+    .login-brand{font-family:'Outfit',sans-serif;font-size:1.5rem;font-weight:800;
+                 color:#1a1208;margin-bottom:6px;}
+    .login-sub{color:#999;font-size:0.87rem;margin-bottom:32px;}
+    .field{margin-bottom:18px;}
+    .field label{display:block;font-size:0.8rem;font-weight:600;color:#6b5c45;margin-bottom:6px;}
+    .field input{width:100%;padding:11px 14px;border:1.5px solid #e0d8cc;border-radius:10px;
+                 font-family:'Inter',sans-serif;font-size:0.9rem;outline:none;transition:border-color .2s;}
+    .field input:focus{border-color:#f5c842;}
+    .error-box{background:#fff0ee;border:1.5px solid #ef9a9a;border-radius:10px;
+               padding:10px 14px;color:#c62828;font-size:0.84rem;margin-bottom:18px;}
+    .login-btn{width:100%;background:#1a1208;color:#f5c842;border:none;border-radius:10px;
+               padding:13px;font-family:'Outfit',sans-serif;font-size:1rem;font-weight:700;
+               cursor:pointer;transition:all .2s;letter-spacing:.3px;}
+    .login-btn:hover{background:#f5c842;color:#1a1208;}
+    .hint{margin-top:18px;text-align:center;font-size:0.78rem;color:#bbb;}
+  </style>
+</head>
+<body>
+<div class="login-card">
+  <div class="login-brand">🍽️ VoiceOrder</div>
+  <div class="login-sub">Admin Panel — Staff Login</div>
+  {% if error %}
+  <div class="error-box">⚠️ {{ error }}</div>
+  {% endif %}
+  <form method="POST">
+    <div class="field">
+      <label>Username</label>
+      <input type="text" name="username" placeholder="Enter username" autofocus required/>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" name="password" placeholder="Enter password" required/>
+    </div>
+    <button class="login-btn" type="submit">Sign In →</button>
+  </form>
+  <div class="hint">Default: admin / admin123</div>
+</div>
+</body>
+</html>

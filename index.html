@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VoiceOrder — Food Ordering</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-brand">🍽️ VoiceOrder</div>
+  <div class="nav-links">
+    <a href="/">Menu</a>
+    <a href="/history">Order History</a>
+    <a href="/kitchen" target="_blank">🍳 Kitchen</a>
+    <a href="/admin" class="admin-link">⚙️ Admin</a>
+  </div>
+</nav>
+
+<div class="main-layout">
+
+  <!-- ══════════ LEFT: Menu Panel ══════════ -->
+  <div class="menu-panel">
+
+    <!-- Search Bar -->
+    <div class="menu-search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="menuSearch"
+             placeholder="Search dishes…"
+             oninput="filterMenu()"/>
+      <button class="search-clear" id="searchClear"
+              onclick="clearSearch()" style="display:none">✕</button>
+    </div>
+
+    <!-- Category Tabs -->
+    <div class="cat-tabs" id="catTabs">
+      <button class="cat-tab active" data-cat="all" onclick="filterCat(this,'all')">
+        🍽️ All
+      </button>
+      {% for category in menu_by_category.keys() %}
+      <button class="cat-tab" data-cat="{{ category }}" onclick="filterCat(this,'{{ category }}')">
+        {% if category == 'Breakfast' %}🌅
+        {% elif category == 'Main Course' %}🍛
+        {% elif category == 'Starter' %}🥗
+        {% elif category == 'Bread' %}🫓
+        {% elif category == 'Beverages' %}🥤
+        {% elif category == 'Dessert' %}🍮
+        {% else %}🍽️{% endif %}
+        {{ category }}
+      </button>
+      {% endfor %}
+    </div>
+
+    <!-- Result count -->
+    <div class="menu-result-bar" id="menuResultBar"></div>
+
+    <!-- Menu Cards Grid -->
+        <!-- Diet / Allergy Filter -->
+    <div class="diet-filter-bar" id="dietBar">
+      <span class="diet-label">🛡️ Diet Filter:</span>
+      <button class="diet-btn" id="dietVeg" onclick="toggleDiet('vegetarian')">🥦 Vegetarian</button>
+      <button class="diet-btn" id="dietVegan" onclick="toggleDiet('vegan')">🌱 Vegan</button>
+      <button class="diet-btn" id="dietNospicy" onclick="toggleDiet('no spicy')">🌶️ No Spicy</button>
+    </div>
+
+    <!-- Recommendations strip -->
+    <div class="reco-strip" id="recoStrip" style="display:none">
+      <span class="reco-label">💡 You might like:</span>
+      <div class="reco-items" id="recoItems"></div>
+    </div>
+
+<div class="menu-grid-new" id="menuGrid">
+      {% for category, items in menu_by_category.items() %}
+        {% for item in items %}
+        <div class="dish-card {% if not item.is_available %}dish-unavailable{% endif %}"
+             data-name="{{ item.item_name | lower }}"
+             data-cat="{{ item.category }}"
+             data-available="{{ 'yes' if item.is_available else 'no' }}">
+
+          <!-- Photo area -->
+          <div class="dish-photo-wrap">
+            {% if item.image is defined and item.image %}
+            <img class="dish-photo"
+                 src="{{ url_for('static', filename='images/' + item.image) }}"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+                 alt="{{ item.item_name }}"/>
+            {% else %}
+            <img class="dish-photo"
+                 src="{{ url_for('static', filename='images/' + item.item_name.replace(' ','-') + '.jpg') }}"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+                 alt="{{ item.item_name }}"/>
+            {% endif %}
+            <!-- Fallback emoji if no image -->
+            <div class="dish-photo-fallback" style="display:none">
+              {% if item.category == 'Breakfast' %}🌅
+              {% elif item.category == 'Main Course' %}🍛
+              {% elif item.category == 'Starter' %}🥗
+              {% elif item.category == 'Bread' %}🫓
+              {% elif item.category == 'Beverages' %}🥤
+              {% elif item.category == 'Dessert' %}🍮
+              {% else %}🍽️{% endif %}
+            </div>
+
+            <!-- Category chip on photo -->
+            <span class="dish-cat-chip chip-{{ item.category | lower | replace(' ','-') }}">
+              {{ item.category }}
+            </span>
+
+            {% if not item.is_available %}
+            <div class="dish-unavail-overlay">Unavailable</div>
+            {% endif %}
+          </div>
+
+          <!-- Card body -->
+          <div class="dish-body">
+            <div class="dish-name">{{ item.item_name.title() }}</div>
+            <div class="dish-meta">
+              <span class="dish-price">₹{{ item.price }}</span>
+            </div>
+
+            {% if item.is_available %}
+            <!-- Qty selector + Add -->
+            <div class="dish-actions">
+              <div class="qty-ctrl">
+                <button class="qty-btn"
+                        onclick="changeQty(this,-1)"
+                        data-item="{{ item.item_name }}">−</button>
+                <span class="qty-val" id="qty-{{ item.item_name | replace(' ','-') }}">1</span>
+                <button class="qty-btn"
+                        onclick="changeQty(this,1)"
+                        data-item="{{ item.item_name }}">+</button>
+              </div>
+              <button class="dish-add-btn"
+                      onclick="addWithQty('{{ item.item_name }}')">
+                Add to Cart
+              </button>
+            </div>
+            {% else %}
+            <div class="dish-actions">
+              <span class="dish-sold-out">Currently Unavailable</span>
+            </div>
+            {% endif %}
+          </div>
+
+        </div>
+        {% endfor %}
+      {% endfor %}
+    </div>
+
+    <!-- Empty state -->
+    <div class="menu-empty" id="menuEmpty" style="display:none">
+      <div class="menu-empty-icon">🔍</div>
+      <p>No dishes found for "<span id="emptyQuery"></span>"</p>
+      <button onclick="clearSearch()">Show all items</button>
+    </div>
+
+  </div><!-- /menu-panel -->
+
+
+  <!-- ══════════ RIGHT: Voice + Cart ══════════ -->
+  <div class="right-panel">
+
+    <!-- Voice Box -->
+    <div class="voice-box">
+      <h2 class="panel-title">🎙️ Voice Order</h2>
+
+      <!-- Language Switcher -->
+      <div class="lang-switcher">
+        <span class="lang-label">🌐 Language:</span>
+        <button class="lang-btn active" data-lang="en-IN" onclick="switchLang('en-IN')">🇬🇧 English</button>
+        <button class="lang-btn" data-lang="ta-IN" onclick="switchLang('ta-IN')">🇮🇳 Tamil</button>
+      </div>
+
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="btnSingle"
+                onclick="setMode('single')">Single Command</button>
+        <button class="mode-btn" id="btnContinuous"
+                onclick="setMode('continuous')">Continuous Mode</button>
+      </div>
+
+      <div class="voice-status">
+        <div class="status-dot" id="statusDot"></div>
+        <div class="status-text" id="statusText">Initialising microphone…</div>
+      </div>
+
+
+      <button class="mic-btn" id="micBtn" onclick="toggleListening()">
+        <span class="mic-icon">🎙️</span>
+        <span id="micLabel">Start Listening</span>
+      </button>
+
+      <div class="transcript-label">Heard:</div>
+      <div class="transcript-box" id="transcriptBox">
+        <span class="placeholder-text">Your speech will appear here…</span>
+      </div>
+
+      <div class="last-cmd" id="lastCmd" style="display:none">
+        <span class="last-cmd-label">Last command:</span>
+        <span id="lastCmdText"></span>
+      </div>
+
+      <div class="manual-input">
+        <input type="text" id="manualText"
+               placeholder="Or type your order…"
+               onkeydown="if(event.key==='Enter') sendManualText()"/>
+        <button onclick="sendManualText()">Send</button>
+      </div>
+
+      <div class="tips">
+        <strong>Try saying:</strong><br/>
+        <span class="tip">"Add two naan"</span>
+        <span class="tip">"One biryani"</span>
+        <span class="tip">"Remove samosa"</span>
+        <span class="tip">"Confirm order"</span>
+      </div>
+    </div>
+
+    <!-- Response -->
+    <div class="response-box" id="responseBox" style="display:none">
+      <span id="responseIcon">✅</span>
+      <span id="responseText"></span>
+    </div>
+
+    <!-- Cart -->
+    <div class="cart-box">
+      <div class="cart-header">
+        <h2 class="panel-title">🛒 Your Cart</h2>
+        <button class="clear-btn" onclick="clearCart()">🗑️ Clear</button>
+      </div>
+      <div id="cartEmpty" class="cart-empty">
+        Your cart is empty.<br/>
+        <small>Add items from the menu or use voice commands.</small>
+      </div>
+      <div id="cartItems" style="display:none">
+        <table class="cart-table">
+          <thead>
+            <tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th><th></th></tr>
+          </thead>
+          <tbody id="cartBody"></tbody>
+        </table>
+        <div class="cart-footer">
+          <div class="cart-total">Grand Total: <strong id="cartTotal">₹0</strong></div>
+          <button class="confirm-btn" onclick="confirmOrder()">✅ Confirm Order</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /right-panel -->
+</div><!-- /main-layout -->
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="modalOverlay" style="display:none">
+  <div class="modal">
+    <div class="modal-icon">🎉</div>
+    <h2>Order Confirmed!</h2>
+    <p id="modalMessage"></p>
+    <button onclick="closeModal()">Place New Order</button>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script>
+// ── Menu filter helpers (search + category tabs) ─────────────────────────
+let activeCat = "all";
+
+function filterCat(btn, cat) {
+  activeCat = cat;
+  document.querySelectorAll(".cat-tab").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  applyFilters();
+}
+
+function filterMenu() {
+  const q = document.getElementById("menuSearch").value.trim();
+  document.getElementById("searchClear").style.display = q ? "inline-flex" : "none";
+  applyFilters();
+}
+
+function clearSearch() {
+  document.getElementById("menuSearch").value = "";
+  document.getElementById("searchClear").style.display = "none";
+  applyFilters();
+}
+
+function applyFilters() {
+  const q    = document.getElementById("menuSearch").value.trim().toLowerCase();
+  const cards = document.querySelectorAll(".dish-card");
+  let visible  = 0;
+
+  cards.forEach(card => {
+    const name  = card.dataset.name;
+    const cat   = card.dataset.cat;
+    const matchQ   = !q   || name.includes(q);
+    const matchCat = activeCat === "all" || cat === activeCat;
+    if (matchQ && matchCat) { card.style.display = ""; visible++; }
+    else                    { card.style.display = "none"; }
+  });
+
+  const resultBar = document.getElementById("menuResultBar");
+  const emptyDiv  = document.getElementById("menuEmpty");
+  if (visible === 0) {
+    emptyDiv.style.display = "flex";
+    document.getElementById("emptyQuery").textContent = q || activeCat;
+    resultBar.textContent = "";
+  } else {
+    emptyDiv.style.display = "none";
+    resultBar.textContent  = visible + " item" + (visible !== 1 ? "s" : "");
+  }
+}
+
+// ── Qty selectors ────────────────────────────────────────────────────────
+function changeQty(btn, delta) {
+  const itemName = btn.dataset.item;
+  const key      = "qty-" + itemName.replace(/ /g, "-");
+  const el       = document.getElementById(key);
+  if (!el) return;
+  let val = parseInt(el.textContent) + delta;
+  if (val < 1) val = 1;
+  if (val > 20) val = 20;
+  el.textContent = val;
+}
+
+function addWithQty(itemName) {
+  const key = "qty-" + itemName.replace(/ /g, "-");
+  const qty = parseInt(document.getElementById(key)?.textContent || "1");
+  fetch("/add_item_manual", {
+    method : "POST",
+    headers: { "Content-Type": "application/json" },
+    body   : JSON.stringify({ item_name: itemName, qty })
+  })
+  .then(r => r.json())
+  .then(d => {
+    showResponse(d.message, d.status === "error");
+    updateCart(d.cart, d.total);
+    // Flash the card
+    const cards = document.querySelectorAll(".dish-card");
+    cards.forEach(c => {
+      if (c.dataset.name === itemName.toLowerCase()) {
+        c.classList.add("card-flash");
+        setTimeout(() => c.classList.remove("card-flash"), 600);
+      }
+    });
+  });
+}
+
+// Override the old addItemManual to use qty=1 default
+function addItemManual(itemName) { addWithQty(itemName); }
+</script>
+
+<!-- Token Confirmed Modal -->
+<div class="modal-overlay" id="tokenOverlay" style="display:none">
+  <div class="modal token-modal">
+    <div class="modal-icon">🎟️</div>
+    <h2>Order Placed!</h2>
+    <div class="token-number" id="tokenNumber">T-00</div>
+    <p id="tokenMsg"></p>
+    <!-- Feedback form -->
+    <div class="feedback-section" id="feedbackSection">
+      <p class="feedback-prompt">How was your last visit? (Optional)</p>
+      <textarea id="feedbackText" placeholder="e.g. The biryani was delicious!" rows="3"></textarea>
+      <button class="feedback-submit-btn" onclick="submitFeedback()">📨 Submit Feedback</button>
+    </div>
+    <button onclick="closeTokenModal()" style="margin-top:14px;background:#1a1208;color:#f5c842;border:none;border-radius:10px;padding:11px 28px;font-family:Outfit,sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;">Place New Order</button>
+  </div>
+</div>
+
+</body>
+</html>

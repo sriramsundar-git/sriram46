@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Receipt #{{ order.order_id }} — VoiceOrder</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',sans-serif;background:#f5f0ea;
+         display:flex;justify-content:center;padding:30px 16px;}
+    .receipt{background:white;width:380px;border-radius:16px;
+             box-shadow:0 4px 24px rgba(0,0,0,0.1);overflow:hidden;}
+    .receipt-header{background:#1a1208;color:white;padding:24px;text-align:center;}
+    .receipt-brand{font-family:'Outfit',sans-serif;font-size:1.4rem;
+                   font-weight:800;color:#f5c842;margin-bottom:4px;}
+    .receipt-subtitle{font-size:0.78rem;color:#c9b99a;}
+    .receipt-body{padding:22px 24px;}
+    .order-meta{display:flex;justify-content:space-between;
+                padding-bottom:14px;border-bottom:2px dashed #e0d8cc;margin-bottom:14px;}
+    .order-meta-item{text-align:center;}
+    .meta-label{font-size:0.68rem;color:#999;text-transform:uppercase;letter-spacing:.5px;}
+    .meta-value{font-size:0.95rem;font-weight:700;color:#1a1208;margin-top:2px;}
+    table{width:100%;border-collapse:collapse;font-size:0.85rem;margin-bottom:16px;}
+    th{background:#faf7f2;padding:8px 10px;text-align:left;
+       font-size:0.72rem;text-transform:uppercase;color:#6b5c45;font-weight:600;}
+    td{padding:9px 10px;border-bottom:1px solid #f5f0ea;}
+    .total-row{padding-top:14px;border-top:2px solid #1a1208;
+               display:flex;justify-content:space-between;align-items:center;}
+    .total-label{font-size:0.9rem;font-weight:600;color:#1a1208;}
+    .total-amount{font-family:'Outfit',sans-serif;font-size:1.3rem;
+                  font-weight:800;color:#c87800;}
+    .receipt-footer{background:#faf7f2;padding:16px 24px;text-align:center;
+                    font-size:0.78rem;color:#aaa;line-height:1.7;}
+    .thank-you{font-family:'Outfit',sans-serif;font-size:1rem;
+               font-weight:700;color:#1a1208;margin-bottom:4px;}
+    .print-btn{display:block;margin:20px auto 0;background:#1a1208;color:#f5c842;
+               border:none;border-radius:10px;padding:11px 28px;font-family:'Outfit',sans-serif;
+               font-size:0.95rem;font-weight:700;cursor:pointer;}
+    .print-btn:hover{background:#f5c842;color:#1a1208;}
+    @media print{
+      body{background:white;padding:0;}
+      .receipt{box-shadow:none;border-radius:0;width:100%;}
+      .print-btn{display:none;}
+    }
+  </style>
+</head>
+<body>
+<div class="receipt">
+  <div class="receipt-header">
+    <div class="receipt-brand">🍽️ VoiceOrder</div>
+    <div class="receipt-subtitle">Thank you for your order!</div>
+  </div>
+
+  <div class="receipt-body">
+    <div class="order-meta">
+      <div class="order-meta-item">
+        <div class="meta-label">Order #</div>
+        <div class="meta-value">{{ order.order_id }}</div>
+      </div>
+      <div class="order-meta-item">
+        <div class="meta-label">Date</div>
+        <div class="meta-value">{{ order.order_time.split(' ')[0] }}</div>
+      </div>
+      <div class="order-meta-item">
+        <div class="meta-label">Time</div>
+        <div class="meta-value">{{ order.order_time.split(' ')[1][:5] }}</div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Item</th><th>Qty</th><th>Rate</th><th>Amount</th></tr>
+      </thead>
+      <tbody>
+        {% for line in order.order_lines %}
+        <tr>
+          <td>{{ line.item_name }}</td>
+          <td>{{ line.quantity }}</td>
+          <td>₹{{ "%.0f"|format(line.unit_price) }}</td>
+          <td>₹{{ "%.2f"|format(line.line_total) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="total-row">
+      <span class="total-label">Grand Total</span>
+      <span class="total-amount">₹{{ "%.2f"|format(order.total_amount) }}</span>
+    </div>
+  </div>
+
+  <div class="receipt-footer">
+    <div class="thank-you">Visit Again! 😊</div>
+    Powered by VoiceOrder
+  </div>
+</div>
+
+<button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+</body>
+</html>

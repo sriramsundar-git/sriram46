@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Order History | VoiceOrder</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-brand">🍽️ VoiceOrder</div>
+  <div class="nav-links">
+    <a href="/">Menu</a>
+    <a href="/history">Order History</a>
+    <a href="/admin" class="admin-link">⚙️ Admin</a>
+  </div>
+</nav>
+
+<div class="history-page">
+  <div class="history-header">
+    <h1>📋 Order History</h1>
+    <span class="order-count">{{ orders|length }} order(s)</span>
+  </div>
+
+  {% if orders %}
+    {% for order in orders %}
+    <div class="order-card">
+      <div class="order-card-header">
+        <div class="order-badge">Order #{{ order.order_id }}</div>
+          <a href="/receipt/{{ order.order_id }}" target="_blank" class="receipt-link">🖨️ Receipt</a>
+        <div class="order-meta">
+          <span>🕐 {{ order.order_time }}</span>
+        </div>
+        <div class="order-total-badge">₹{{ "%.2f"|format(order.total_amount) }}</div>
+      </div>
+      <table class="history-table">
+        <thead>
+          <tr><th>Item</th><th>Qty</th><th>Line Total</th></tr>
+        </thead>
+        <tbody>
+          {% for line in order.order_lines %}
+          <tr>
+            <td>{{ line.item_name }}</td>
+            <td><span class="qty-badge">× {{ line.quantity }}</span></td>
+            <td>₹{{ "%.2f"|format(line.line_total) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="no-orders">
+      <div style="font-size:3rem">🍽️</div>
+      <p>No orders placed yet.</p>
+      <a href="/" class="go-order-btn">Place Your First Order</a>
+    </div>
+  {% endif %}
+</div>
+
+</body>
+</html>

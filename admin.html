@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel — VoiceOrder</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@600&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+  /* ══ Variables ══════════════════════════════════════════════ */
+  :root{
+    --bg:#0f1117; --surface:#181c25; --surface2:#1e2330; --surface3:#242938;
+    --border:#252b3b; --border2:#2e3548;
+    --accent:#e8a045; --accent-dim:rgba(232,160,69,.12);
+    --blue:#4d9eff;   --blue-dim:rgba(77,158,255,.1);
+    --green:#3ecf8e;  --green-dim:rgba(62,207,142,.1);
+    --red:#f46b6b;    --red-dim:rgba(244,107,107,.1);
+    --purple:#a78bfa; --purple-dim:rgba(167,139,250,.1);
+    --teal:#2dd4bf;   --teal-dim:rgba(45,212,191,.1);
+    --text:#e8ecf4; --muted:#6b7591; --dim:#3a4155;
+    --font:'DM Sans',sans-serif; --mono:'DM Mono',monospace; --serif:'Playfair Display',serif;
+    --radius:10px; --radius-lg:14px;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5}
+  a{color:inherit;text-decoration:none}
+  input,select,textarea{font-family:var(--font);color:var(--text)}
+  button{font-family:var(--font);cursor:pointer}
+
+  /* ══ Scrollbar ══════════════════════════════════════════════ */
+  ::-webkit-scrollbar{width:5px;height:5px}
+  ::-webkit-scrollbar-track{background:var(--bg)}
+  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+  ::-webkit-scrollbar-thumb:hover{background:var(--accent)}
+
+  /* ══ Navbar ═════════════════════════════════════════════════ */
+  .navbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 1.5rem;height:58px;
+    background:var(--surface);border-bottom:1px solid var(--border);
+    position:sticky;top:0;z-index:200;
+  }
+  .nav-brand{
+    font-family:var(--serif);font-size:1.2rem;color:var(--accent);
+    display:flex;align-items:center;gap:8px;letter-spacing:.3px;
+  }
+  .nav-brand-icon{width:30px;height:30px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center}
+  .nav-brand-icon svg{width:17px;height:17px;fill:#000}
+  .nav-links{display:flex;align-items:center;gap:.3rem}
+  .nav-links a{
+    font-size:.8rem;font-weight:500;letter-spacing:.5px;
+    padding:6px 14px;border-radius:7px;color:var(--muted);
+    transition:all .15s;
+  }
+  .nav-links a:hover{color:var(--text);background:var(--surface2)}
+  .nav-links a.active{color:var(--accent);background:var(--accent-dim)}
+  .nav-user{
+    display:flex;align-items:center;gap:10px;
+    margin-left:1rem;padding-left:1rem;border-left:1px solid var(--border);
+  }
+  .nav-avatar{
+    width:30px;height:30px;border-radius:50%;
+    background:var(--blue-dim);border:1px solid rgba(77,158,255,.3);
+    display:flex;align-items:center;justify-content:center;
+    font-size:.75rem;font-weight:600;color:var(--blue);
+  }
+  .nav-name{font-size:.8rem;color:var(--muted)}
+  .nav-role{font-size:.68rem;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:var(--accent-dim);color:var(--accent)}
+  .nav-logout{
+    font-size:.75rem;font-weight:500;padding:5px 12px;border-radius:7px;
+    color:var(--red);border:1px solid rgba(244,107,107,.25);background:var(--red-dim);
+    transition:all .15s;margin-left:.5rem;
+  }
+  .nav-logout:hover{background:var(--red);color:#fff}
+
+  /* ══ Low stock banner ═══════════════════════════════════════ */
+  .low-stock-banner{
+    display:flex;align-items:center;flex-wrap:wrap;gap:8px;
+    padding:10px 1.5rem;background:rgba(244,107,107,.07);
+    border-bottom:1px solid rgba(244,107,107,.2);
+    font-size:.8rem;color:var(--red);
+  }
+  .low-stock-banner strong{font-weight:600}
+  .low-stock-chip{
+    background:rgba(244,107,107,.12);border:1px solid rgba(244,107,107,.25);
+    padding:2px 10px;border-radius:20px;font-size:.73rem;color:var(--red);
+  }
+
+  /* ══ Tab bar ════════════════════════════════════════════════ */
+  .tab-bar{
+    display:flex;align-items:center;gap:2px;
+    padding:.75rem 1.5rem 0;background:var(--surface);
+    border-bottom:1px solid var(--border);overflow-x:auto;
+  }
+  .tab-bar::-webkit-scrollbar{height:0}
+  .tab-btn{
+    display:flex;align-items:center;gap:7px;
+    font-size:.78rem;font-weight:500;letter-spacing:.3px;
+    padding:9px 18px;border:none;background:none;
+    color:var(--muted);border-bottom:2px solid transparent;
+    margin-bottom:-1px;transition:all .15s;white-space:nowrap;
+  }
+  .tab-btn:hover{color:var(--text)}
+  .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+  .tab-btn svg{width:14px;height:14px;fill:currentColor;flex-shrink:0}
+
+  /* ══ Admin page body ════════════════════════════════════════ */
+  .admin-body{padding:1.5rem;max-width:1400px;margin:0 auto}
+
+  /* ══ Panel header ═══════════════════════════════════════════ */
+  .panel-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:1.4rem;flex-wrap:wrap;gap:.75rem;
+  }
+  .panel-title{font-family:var(--serif);font-size:1.5rem;color:var(--text);font-weight:600}
+  .panel-sub{font-size:.78rem;color:var(--muted);margin-top:2px}
+
+  /* ══ Buttons ════════════════════════════════════════════════ */
+  .btn{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:.78rem;font-weight:600;letter-spacing:.5px;
+    padding:8px 18px;border-radius:8px;border:none;
+    transition:all .15s;cursor:pointer;white-space:nowrap;
+  }
+  .btn svg{width:13px;height:13px;fill:currentColor}
+  .btn-primary{background:var(--accent);color:#000}
+  .btn-primary:hover{background:#f0aa50;box-shadow:0 4px 14px rgba(232,160,69,.3)}
+  .btn-secondary{background:var(--surface2);color:var(--muted);border:1px solid var(--border2)}
+  .btn-secondary:hover{color:var(--text);border-color:var(--accent)}
+  .btn-danger{background:var(--red-dim);color:var(--red);border:1px solid rgba(244,107,107,.25)}
+  .btn-danger:hover{background:var(--red);color:#fff}
+  .btn-success{background:var(--green-dim);color:var(--green);border:1px solid rgba(62,207,142,.25)}
+  .btn-success:hover{background:var(--green);color:#000}
+  .btn-blue{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(77,158,255,.25)}
+  .btn-blue:hover{background:var(--blue);color:#000}
+  .btn-sm{padding:5px 12px;font-size:.72rem}
+  .btn:active{transform:scale(.97)}
+  .btn:disabled{opacity:.4;cursor:default;transform:none}
+
+  /* ══ KPI Grid ═══════════════════════════════════════════════ */
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1rem;margin-bottom:1.5rem}
+  .kpi-card{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius-lg);padding:1.1rem 1.2rem;
+    display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden;
+    transition:box-shadow .2s;
+  }
+  .kpi-card:hover{box-shadow:0 6px 24px rgba(0,0,0,.4)}
+  .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+  .kpi-blue::before{background:var(--blue)}
+  .kpi-green::before{background:var(--green)}
+  .kpi-orange::before{background:var(--accent)}
+  .kpi-purple::before{background:var(--purple)}
+  .kpi-teal::before{background:var(--teal)}
+  .kpi-icon{
+    width:34px;height:34px;border-radius:9px;
+    display:flex;align-items:center;justify-content:center;
+    margin-bottom:2px;
+  }
+  .kpi-icon svg{width:17px;height:17px;fill:currentColor}
+  .kpi-blue .kpi-icon{background:var(--blue-dim);color:var(--blue)}
+  .kpi-green .kpi-icon{background:var(--green-dim);color:var(--green)}
+  .kpi-orange .kpi-icon{background:var(--accent-dim);color:var(--accent)}
+  .kpi-purple .kpi-icon{background:var(--purple-dim);color:var(--purple)}
+  .kpi-teal .kpi-icon{background:var(--teal-dim);color:var(--teal)}
+  .kpi-value{font-family:var(--serif);font-size:1.7rem;font-weight:600;color:var(--text);line-height:1}
+  .kpi-label{font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+
+  /* ══ Charts ═════════════════════════════════════════════════ */
+  .charts-grid{display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-bottom:1.5rem}
+  .chart-card{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius-lg);padding:1.2rem;
+  }
+  .chart-card.full{grid-column:1/-1}
+  .chart-title{font-size:.8rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:1rem}
+
+  /* ══ Table card ═════════════════════════════════════════════ */
+  .table-card{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius-lg);overflow:hidden;margin-bottom:1rem;
+  }
+  .table-card-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:1rem 1.2rem;border-bottom:1px solid var(--border);
+  }
+  .table-card-title{font-size:.82rem;font-weight:600;letter-spacing:.5px;color:var(--text)}
+
+  /* ══ Tables ═════════════════════════════════════════════════ */
+  .data-table{width:100%;border-collapse:collapse}
+  .data-table th{
+    font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;
+    color:var(--muted);font-weight:500;padding:10px 14px;
+    background:var(--surface2);border-bottom:1px solid var(--border);
+    text-align:left;white-space:nowrap;
+  }
+  .data-table td{
+    padding:11px 14px;border-bottom:1px solid var(--border);
+    font-size:.83rem;color:var(--text);vertical-align:middle;
+  }
+  .data-table tr:last-child td{border-bottom:none}
+  .data-table tbody tr{transition:background .1s}
+  .data-table tbody tr:hover{background:var(--surface2)}
+  .table-wrap{overflow-x:auto}
+
+  /* ══ Badges & Pills ═════════════════════════════════════════ */
+  .pill{
+    display:inline-flex;align-items:center;gap:4px;
+    font-size:.7rem;font-weight:500;letter-spacing:.5px;
+    padding:3px 10px;border-radius:20px;white-space:nowrap;
+  }
+  .pill-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(62,207,142,.25)}
+  .pill-red{background:var(--red-dim);color:var(--red);border:1px solid rgba(244,107,107,.2)}
+  .pill-blue{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(77,158,255,.2)}
+  .pill-amber{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(232,160,69,.2)}
+  .pill-gray{background:var(--surface3);color:var(--muted);border:1px solid var(--border2)}
+  .pill-purple{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
+
+  .cat-badge{
+    font-size:.68rem;letter-spacing:.5px;padding:3px 9px;
+    border-radius:6px;font-weight:500;display:inline-block;
+  }
+  .cat-main-course{background:rgba(232,160,69,.12);color:var(--accent)}
+  .cat-starter{background:rgba(62,207,142,.1);color:var(--green)}
+  .cat-bread{background:rgba(167,139,250,.1);color:var(--purple)}
+  .cat-breakfast{background:rgba(45,212,191,.1);color:var(--teal)}
+  .cat-beverages{background:rgba(77,158,255,.1);color:var(--blue)}
+  .cat-dessert{background:rgba(244,107,107,.1);color:var(--red)}
+
+  .stock-val{font-family:var(--mono);font-size:.82rem;font-weight:500}
+  .stock-ok{color:var(--green)}
+  .stock-mid{color:var(--accent)}
+  .stock-low{color:var(--red)}
+
+  .rank-badge{
+    font-family:var(--mono);font-size:.75rem;font-weight:500;
+    width:28px;height:28px;border-radius:50%;display:inline-flex;
+    align-items:center;justify-content:center;
+  }
+  .rank-1{background:rgba(232,160,69,.15);color:var(--accent)}
+  .rank-2{background:rgba(180,180,180,.1);color:#bbb}
+  .rank-3{background:rgba(180,120,60,.12);color:#c87a4a}
+
+  .role-badge.role-manager{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(232,160,69,.2);font-size:.7rem;padding:3px 10px;border-radius:20px}
+  .role-badge.role-cashier{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(77,158,255,.2);font-size:.7rem;padding:3px 10px;border-radius:20px}
+
+  .sentiment-badge{font-size:.72rem;padding:3px 10px;border-radius:20px;display:inline-block}
+  .sentiment-positive{background:var(--green-dim);color:var(--green)}
+  .sentiment-negative{background:var(--red-dim);color:var(--red)}
+  .sentiment-neutral{background:var(--surface3);color:var(--muted)}
+
+  /* ══ Toolbar ════════════════════════════════════════════════ */
+  .toolbar{
+    display:flex;align-items:center;gap:.6rem;
+    padding:.85rem 1.2rem;border-bottom:1px solid var(--border);
+    flex-wrap:wrap;
+  }
+  .toolbar-input{
+    flex:1;min-width:160px;max-width:280px;
+    padding:7px 12px;border-radius:8px;
+    background:var(--surface2);border:1px solid var(--border2);
+    color:var(--text);font-size:.82rem;outline:none;
+    transition:border-color .15s;
+  }
+  .toolbar-input:focus{border-color:var(--accent)}
+  .toolbar-input::placeholder{color:var(--dim)}
+  .toolbar-select{
+    padding:7px 12px;border-radius:8px;
+    background:var(--surface2);border:1px solid var(--border2);
+    color:var(--text);font-size:.82rem;outline:none;cursor:pointer;
+    transition:border-color .15s;
+  }
+  .toolbar-select:focus{border-color:var(--accent)}
+  .toolbar-select option{background:var(--surface2)}
+  .fm-footer{padding:.6rem 1.2rem;font-size:.72rem;color:var(--muted);border-top:1px solid var(--border)}
+
+  /* ══ Action buttons in table ════════════════════════════════ */
+  .act-group{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+
+  /* ══ Modals ═════════════════════════════════════════════════ */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);
+    display:flex;align-items:center;justify-content:center;z-index:1000;padding:1rem;
+  }
+  .modal{
+    background:var(--surface);border:1px solid var(--border2);
+    border-radius:var(--radius-lg);width:100%;max-width:460px;
+    box-shadow:0 24px 60px rgba(0,0,0,.6);animation:mIn .2s ease;
+  }
+  .modal-sm{max-width:360px}
+  .modal-lg{max-width:560px}
+  @keyframes mIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+  .modal-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:1.1rem 1.3rem;border-bottom:1px solid var(--border);
+  }
+  .modal-title{font-family:var(--serif);font-size:1.05rem;color:var(--text)}
+  .modal-close{
+    width:28px;height:28px;border-radius:7px;border:none;
+    background:var(--surface2);color:var(--muted);
+    display:flex;align-items:center;justify-content:center;font-size:1rem;
+    transition:all .15s;cursor:pointer;
+  }
+  .modal-close:hover{background:var(--surface3);color:var(--text)}
+  .modal-body{padding:1.3rem}
+  .modal-foot{
+    display:flex;gap:.5rem;justify-content:flex-end;
+    padding:1rem 1.3rem;border-top:1px solid var(--border);
+  }
+
+  /* ══ Form fields ════════════════════════════════════════════ */
+  .field{display:flex;flex-direction:column;gap:5px;margin-bottom:.9rem}
+  .field:last-child{margin-bottom:0}
+  .field label{font-size:.75rem;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+  .field input,.field select,.field textarea{
+    padding:9px 12px;border-radius:8px;
+    background:var(--surface2);border:1px solid var(--border2);
+    color:var(--text);font-size:.85rem;outline:none;
+    transition:border-color .15s;width:100%;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+  .field input::placeholder{color:var(--dim)}
+  .field select option{background:var(--surface2)}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+  .checkbox-field{flex-direction:row;align-items:center;gap:8px}
+  .checkbox-field label{text-transform:none;letter-spacing:0;font-size:.83rem;color:var(--text)}
+  .checkbox-field input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--accent)}
+  .form-error{
+    font-size:.78rem;color:var(--red);padding:8px 12px;
+    background:var(--red-dim);border:1px solid rgba(244,107,107,.2);
+    border-radius:7px;margin-top:.5rem;display:none;
+  }
+
+  /* ══ Delete confirm ═════════════════════════════════════════ */
+  .delete-warn{
+    font-size:.85rem;color:var(--muted);line-height:1.6;
+    padding:.75rem 1rem;background:var(--red-dim);
+    border:1px solid rgba(244,107,107,.15);border-radius:8px;margin-bottom:.5rem;
+  }
+  .delete-warn strong{color:var(--text)}
+
+  /* ══ NLP entries list ═══════════════════════════════════════ */
+  .nlp-list{display:flex;flex-wrap:wrap;gap:6px;max-height:180px;overflow-y:auto;margin-bottom:1rem}
+  .nlp-chip{
+    font-family:var(--mono);font-size:.75rem;padding:4px 10px;
+    border-radius:6px;background:var(--surface3);color:var(--muted);
+    border:1px solid var(--border2);
+  }
+  .nlp-hint{font-size:.78rem;color:var(--muted);margin-bottom:.75rem;line-height:1.5}
+  .nlp-add-row{display:flex;gap:8px}
+  .nlp-add-row input{
+    flex:1;padding:8px 12px;border-radius:8px;
+    background:var(--surface2);border:1px solid var(--border2);
+    color:var(--text);font-size:.83rem;outline:none;
+  }
+  .nlp-add-row input:focus{border-color:var(--accent)}
+  .nlp-msg{font-size:.78rem;color:var(--green);margin-top:6px;display:none}
+
+  /* ══ Inventory alert ════════════════════════════════════════ */
+  .inv-alert{
+    padding:1rem 1.2rem;background:rgba(244,107,107,.06);
+    border:1px solid rgba(244,107,107,.2);border-radius:var(--radius);
+    margin-bottom:1rem;font-size:.83rem;color:var(--red);
+  }
+  .inv-alert ul{margin:.5rem 0 0 1.2rem}
+  .inv-alert li{margin-bottom:2px}
+
+  /* ══ Schedule info box ══════════════════════════════════════ */
+  .sched-info{
+    padding:1rem 1.2rem;background:var(--accent-dim);
+    border:1px solid rgba(232,160,69,.2);border-radius:var(--radius);
+    margin-top:1rem;font-size:.82rem;color:var(--accent);line-height:1.6;
+  }
+  .sched-info strong{font-weight:600}
+
+  /* ══ Restock input ══════════════════════════════════════════ */
+  .restock-row{display:flex;align-items:center;gap:6px}
+  .restock-row input{
+    width:70px;padding:6px 8px;border-radius:7px;text-align:center;
+    background:var(--surface2);border:1px solid var(--border2);
+    color:var(--text);font-family:var(--mono);font-size:.82rem;outline:none;
+  }
+  .restock-row input:focus{border-color:var(--accent)}
+
+  /* ══ Schedule selects ═══════════════════════════════════════ */
+  .sched-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .sched-row select{
+    padding:5px 8px;border-radius:7px;
+    background:var(--surface2);border:1px solid var(--border2);
+    color:var(--text);font-size:.78rem;outline:none;
+  }
+  .sched-row select:focus{border-color:var(--accent)}
+  .sched-row select option{background:var(--surface2)}
+  .sched-sep{font-size:.75rem;color:var(--muted)}
+
+  /* ══ Feedback cards (sentiment summary) ══════════════════════ */
+  .sentiment-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:1rem}
+  .sentiment-card{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius-lg);padding:1.2rem;text-align:center;
+  }
+  .sentiment-card .s-num{font-family:var(--serif);font-size:2rem;font-weight:600}
+  .sentiment-card .s-lbl{font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-top:4px}
+  .sc-green .s-num{color:var(--green)} .sc-red .s-num{color:var(--red)} .sc-gray .s-num{color:var(--muted)}
+
+  /* ══ No data ════════════════════════════════════════════════ */
+  .no-data{text-align:center;padding:2.5rem;color:var(--dim);font-size:.85rem}
+
+  /* ══ Toast ══════════════════════════════════════════════════ */
+  .toast{
+    position:fixed;bottom:1.5rem;right:1.5rem;
+    display:flex;align-items:center;gap:10px;
+    font-size:.82rem;padding:11px 20px;border-radius:9px;
+    background:var(--surface2);border:1px solid var(--border2);
+    color:var(--text);box-shadow:0 6px 24px rgba(0,0,0,.5);
+    transform:translateX(130%);transition:transform .25s ease;z-index:9999;
+    max-width:340px;
+  }
+  .toast.show{transform:translateX(0)}
+  .toast-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+  /* ══ Responsive ═════════════════════════════════════════════ */
+  @media(max-width:900px){
+    .charts-grid{grid-template-columns:1fr}
+    .chart-card.full{grid-column:auto}
+    .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  }
+  @media(max-width:640px){
+    .navbar{padding:0 1rem}
+    .nav-links a:not(.active){display:none}
+    .admin-body{padding:1rem}
+    .kpi-grid{grid-template-columns:1fr 1fr}
+    .sentiment-grid{grid-template-columns:1fr}
+    .tab-btn span{display:none}
+  }
+  </style>
+</head>
+<body>
+
+<!-- ══ NAVBAR ══════════════════════════════════════════════════ -->
+<nav class="navbar">
+  <div class="nav-brand">
+    <div class="nav-brand-icon">
+      <svg viewBox="0 0 24 24"><path d="M18.06 22.99h1.66c.84 0 1.53-.64 1.63-1.46L23 5.05h-5V1h-1.97v4.05h-4.97l.3 2.34c1.71.47 3.31 1.32 4.27 2.26 1.44 1.42 2.43 2.89 2.43 5.29v8.05zM1 21.99V21h15.03v.99c0 .55-.45 1-1.01 1H2.01c-.56 0-1.01-.45-1.01-1zm15.03-7c0-8-15.03-8-15.03 0h15.03zM1.02 17h15v2h-15z"/></svg>
+    </div>
+    VoiceOrder
+  </div>
+  <div class="nav-links">
+    <a href="/">Menu</a>
+    <a href="/history">Orders</a>
+    <a href="/kitchen">Kitchen</a>
+    <a href="/admin" class="active">Admin</a>
+    <div class="nav-user">
+      <div class="nav-avatar">{{ (staff_name[0]|upper) if staff_name and staff_name|length > 0 else 'A' }}</div>
+      <div>
+        <div class="nav-name">{{ staff_name }}</div>
+      </div>
+      {% if staff_role == 'manager' %}<span class="nav-role">Manager</span>{% endif %}
+      <a href="/admin/logout" class="nav-logout">Sign out</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ══ LOW STOCK BANNER ════════════════════════════════════════ -->
+{% if low_stock and low_stock|length > 0 %}
+<div class="low-stock-banner">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+  <strong>Low Stock:</strong>
+  {% for item in low_stock %}
+    <span class="low-stock-chip">{{ item.item_name.title() }} &mdash; {{ item.stock|default(0) }} left</span>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ══ TAB BAR ═════════════════════════════════════════════════ -->
+<div class="tab-bar">
+  <button class="tab-btn active" id="tabSales" onclick="switchTab('Sales')">
+    <svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
+    <span>Sales</span>
+  </button>
+  <button class="tab-btn" id="tabFood" onclick="switchTab('Food')">
+    <svg viewBox="0 0 24 24"><path d="M18.06 22.99h1.66c.84 0 1.53-.64 1.63-1.46L23 5.05h-5V1h-1.97v4.05h-4.97l.3 2.34c1.71.47 3.31 1.32 4.27 2.26 1.44 1.42 2.43 2.89 2.43 5.29v8.05zM1 21.99V21h15.03v.99c0 .55-.45 1-1.01 1H2.01c-.56 0-1.01-.45-1.01-1zm15.03-7c0-8-15.03-8-15.03 0h15.03zM1.02 17h15v2h-15z"/></svg>
+    <span>Menu</span>
+  </button>
+  <button class="tab-btn" id="tabInv" onclick="switchTab('Inv')">
+    <svg viewBox="0 0 24 24"><path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z"/></svg>
+    <span>Inventory</span>
+  </button>
+  {% if staff_role == 'manager' %}
+  <button class="tab-btn" id="tabStaff" onclick="switchTab('Staff')">
+    <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+    <span>Staff</span>
+  </button>
+  {% endif %}
+  <button class="tab-btn" id="tabFeedback" onclick="switchTab('Feedback')">
+    <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+    <span>Feedback</span>
+  </button>
+  <button class="tab-btn" id="tabSchedule" onclick="switchTab('Schedule')">
+    <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+    <span>Schedule</span>
+  </button>
+</div>
+
+<!-- ══ ADMIN BODY ══════════════════════════════════════════════ -->
+<div class="admin-body">
+
+  <!-- ══ TAB: SALES ══════════════════════════════════════════ -->
+  <div id="panelSales">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">Sales Dashboard</div>
+        <div class="panel-sub">Overview of orders and revenue</div>
+      </div>
+      <button class="btn btn-secondary" onclick="location.reload()">
+        <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+        Refresh
+      </button>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg></div>
+        <div class="kpi-value">{{ stats.total_orders|default(0) }}</div>
+        <div class="kpi-label">Total Orders</div>
+      </div>
+      <div class="kpi-card kpi-green">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg></div>
+        <div class="kpi-value">₹{{ stats.total_revenue|default(0)|round(2) }}</div>
+        <div class="kpi-label">Total Revenue</div>
+      </div>
+      <div class="kpi-card kpi-orange">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg></div>
+        <div class="kpi-value">{{ stats.today_orders|default(0) }}</div>
+        <div class="kpi-label">Today's Orders</div>
+      </div>
+      <div class="kpi-card kpi-teal">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg></div>
+        <div class="kpi-value">₹{{ stats.today_revenue|default(0)|round(2) }}</div>
+        <div class="kpi-label">Today's Revenue</div>
+      </div>
+      <div class="kpi-card kpi-purple">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg></div>
+        <div class="kpi-value">₹{{ stats.avg_order_value|default(0)|round(2) }}</div>
+        <div class="kpi-label">Avg Order Value</div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">Orders &amp; Revenue — Last 7 Days</div>
+        <canvas id="dailyChart" height="110"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Top Items</div>
+        <canvas id="topItemsChart" height="200"></canvas>
+      </div>
+      <div class="chart-card full">
+        <div class="chart-title">Revenue by Item</div>
+        <canvas id="revenueChart" height="90"></canvas>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-card-head">
+        <div class="table-card-title">Best Selling Items</div>
+      </div>
+      {% if stats.top_items and stats.top_items|length > 0 %}
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Rank</th><th>Item</th><th>Units Sold</th><th>Revenue</th></tr></thead>
+          <tbody>
+            {% for item in stats.top_items %}
+            <tr>
+              <td>
+                {% if loop.index==1 %}<span class="rank-badge rank-1">1</span>
+                {% elif loop.index==2 %}<span class="rank-badge rank-2">2</span>
+                {% elif loop.index==3 %}<span class="rank-badge rank-3">3</span>
+                {% else %}<span style="font-family:var(--mono);color:var(--muted);font-size:.78rem">#{{ loop.index }}</span>
+                {% endif %}
+              </td>
+              <td style="font-weight:500">{{ item.item_name.title() }}</td>
+              <td><span class="pill pill-blue">{{ item.total_qty }} units</span></td>
+              <td style="font-family:var(--mono);color:var(--green)">₹{{ item.total_rev|default(0)|round(2) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}<p class="no-data">No sales data yet.</p>{% endif %}
+    </div>
+  </div>
+
+  <!-- ══ TAB: MENU MANAGEMENT ════════════════════════════════ -->
+  <div id="panelFood" style="display:none">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">Menu Management</div>
+        <div class="panel-sub">{{ menu|length }} items in the menu</div>
+      </div>
+      <button class="btn btn-primary" onclick="openAddModal()">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        Add Item
+      </button>
+    </div>
+    <div class="table-card">
+      <div class="toolbar">
+        <input class="toolbar-input" type="text" id="fmSearch" placeholder="Search items…" oninput="filterTable()"/>
+        <select class="toolbar-select" id="fmCategory" onchange="filterTable()">
+          <option value="">All Categories</option>
+          <option>Main Course</option><option>Starter</option><option>Bread</option>
+          <option>Breakfast</option><option>Beverages</option><option>Dessert</option>
+        </select>
+        <select class="toolbar-select" id="fmStatus" onchange="filterTable()">
+          <option value="">All Status</option>
+          <option value="available">Available</option>
+          <option value="unavailable">Unavailable</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table" id="fmTable">
+          <thead>
+            <tr><th>#</th><th>Item</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="fmTableBody">
+            {% for item in menu %}
+            <tr id="row-{{ item.item_id }}"
+                data-name="{{ item.item_name }}"
+                data-category="{{ item.category }}"
+                data-available="{{ 'available' if item.is_available else 'unavailable' }}">
+              <td style="font-family:var(--mono);color:var(--dim);font-size:.78rem">{{ item.item_id }}</td>
+              <td style="font-weight:500">{{ item.item_name.title() }}</td>
+              <td><span class="cat-badge cat-{{ item.category|lower|replace(' ','-') }}">{{ item.category }}</span></td>
+              <td style="font-family:var(--mono);color:var(--accent)">₹{{ item.price|round(2) }}</td>
+              <td>
+                <span class="stock-val {% if item.stock|default(50)<=10 %}stock-low{% elif item.stock|default(50)<=20 %}stock-mid{% else %}stock-ok{% endif %}"
+                      id="stock-{{ item.item_id }}">{{ item.stock|default(50) }}</span>
+              </td>
+              <td>
+                <span class="pill {% if item.is_available %}pill-green{% else %}pill-red{% endif %}"
+                      id="pill-{{ item.item_id }}">
+                  {{ 'Available' if item.is_available else 'Unavailable' }}
+                </span>
+              </td>
+              <td>
+                <div class="act-group">
+                  <button class="btn btn-sm btn-secondary" id="toggleBtn-{{ item.item_id }}"
+                          onclick="toggleItem({{ item.item_id }})">
+                    {{ 'Disable' if item.is_available else 'Enable' }}
+                  </button>
+                  <button class="btn btn-sm btn-blue"
+                          onclick="openEditModal({{ item.item_id }})">
+                    Edit
+                  </button>
+                  <button class="btn btn-sm btn-secondary"
+                          onclick="openNlpModal({{ item.item_id }})">
+                    Voice
+                  </button>
+                  <button class="btn btn-sm btn-danger"
+                          onclick="deleteItem({{ item.item_id }})">
+                    Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="fm-footer"><span id="fmCount">{{ menu|length }} item(s)</span></div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: INVENTORY ══════════════════════════════════════ -->
+  <div id="panelInv" style="display:none">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">Inventory</div>
+        <div class="panel-sub">Stock is auto-deducted when orders are placed</div>
+      </div>
+    </div>
+    {% if low_stock and low_stock|length > 0 %}
+    <div class="inv-alert">
+      <strong>{{ low_stock|length }} item(s) running low (≤ 10 units):</strong>
+      <ul>{% for i in low_stock %}<li>{{ i.item_name.title() }} — {{ i.stock|default(0) }} remaining</li>{% endfor %}</ul>
+    </div>
+    {% endif %}
+    <div class="table-card">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Item</th><th>Category</th><th>Stock</th><th>Status</th><th>Restock</th></tr></thead>
+          <tbody>
+            {% for item in menu %}
+            <tr>
+              <td style="font-family:var(--mono);color:var(--dim);font-size:.78rem">{{ item.item_id }}</td>
+              <td style="font-weight:500">{{ item.item_name.title() }}</td>
+              <td><span class="cat-badge cat-{{ item.category|lower|replace(' ','-') }}">{{ item.category }}</span></td>
+              <td>
+                <span class="stock-val {% if item.stock|default(50)<=10 %}stock-low{% elif item.stock|default(50)<=20 %}stock-mid{% else %}stock-ok{% endif %}"
+                      id="inv-stock-{{ item.item_id }}">{{ item.stock|default(50) }}</span>
+              </td>
+              <td>
+                <span class="pill {% if item.is_available %}pill-green{% else %}pill-red{% endif %}">
+                  {{ 'In Stock' if item.is_available else 'Out of Stock' }}
+                </span>
+              </td>
+              <td>
+                <div class="restock-row">
+                  <input type="number" id="restock-{{ item.item_id }}" value="50" min="1" max="999"/>
+                  <button class="btn btn-sm btn-success" onclick="restockItem({{ item.item_id }})">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                    Restock
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: STAFF ══════════════════════════════════════════ -->
+  {% if staff_role == 'manager' %}
+  <div id="panelStaff" style="display:none">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">Staff Management</div>
+        <div class="panel-sub">Manage team accounts and access</div>
+      </div>
+      <button class="btn btn-primary" onclick="openAddStaffModal()">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        Add Staff
+      </button>
+    </div>
+    <div class="table-card">
+      <div class="table-wrap">
+        <table class="data-table" id="staffTable">
+          <thead><tr><th>#</th><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+          <tbody id="staffTableBody">
+            {% for s in staff_list %}
+            <tr id="srow-{{ s.staff_id }}">
+              <td style="font-family:var(--mono);color:var(--dim);font-size:.78rem">{{ s.staff_id }}</td>
+              <td style="font-weight:500">{{ s.name }}</td>
+              <td style="font-family:var(--mono);color:var(--muted);font-size:.8rem">{{ s.username }}</td>
+              <td><span class="role-badge role-{{ s.role }}">{{ 'Manager' if s.role=='manager' else 'Cashier' }}</span></td>
+              <td><span class="pill {% if s.is_active %}pill-green{% else %}pill-red{% endif %}">{{ 'Active' if s.is_active else 'Inactive' }}</span></td>
+              <td style="font-family:var(--mono);font-size:.78rem;color:var(--muted)">{{ s.created_at.split(' ')[0] }}</td>
+              <td>
+                <div class="act-group">
+                  <button class="btn btn-sm btn-blue"
+                          onclick="openEditStaff({{ s.staff_id }},{{ s.name|tojson }},{{ s.role|tojson }},{{ s.is_active|tojson }})">Edit</button>
+                  <button class="btn btn-sm btn-secondary"
+                          onclick="openResetPwd({{ s.staff_id }},{{ s.name|tojson }})">Reset Password</button>
+                  <button class="btn btn-sm btn-danger"
+                          onclick="deleteStaff({{ s.staff_id }},{{ s.name|tojson }})">Remove</button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ══ TAB: FEEDBACK ═══════════════════════════════════════ -->
+  <div id="panelFeedback" style="display:none">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">Customer Feedback</div>
+        <div class="panel-sub">Sentiment analysis of customer responses</div>
+      </div>
+    </div>
+    {% if feedbacks and feedbacks|length > 0 %}
+    <div class="sentiment-grid" style="margin-bottom:1.5rem">
+      {% set pos = feedbacks|selectattr('sentiment','equalto','positive')|list|length %}
+      {% set neg = feedbacks|selectattr('sentiment','equalto','negative')|list|length %}
+      {% set neu = feedbacks|selectattr('sentiment','equalto','neutral')|list|length %}
+      <div class="sentiment-card sc-green">
+        <div class="s-num">{{ pos }}</div>
+        <div class="s-lbl">Positive</div>
+      </div>
+      <div class="sentiment-card sc-gray">
+        <div class="s-num">{{ neu }}</div>
+        <div class="s-lbl">Neutral</div>
+      </div>
+      <div class="sentiment-card sc-red">
+        <div class="s-num">{{ neg }}</div>
+        <div class="s-lbl">Negative</div>
+      </div>
+    </div>
+    {% endif %}
+    <div class="table-card">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Order</th><th>Feedback</th><th>Sentiment</th><th>Time</th></tr></thead>
+          <tbody>
+            {% if feedbacks and feedbacks|length > 0 %}
+              {% for fb in feedbacks %}
+              <tr>
+                <td style="font-family:var(--mono);color:var(--dim);font-size:.78rem">{{ fb.feedback_id }}</td>
+                <td style="font-family:var(--mono);font-weight:600">#{{ fb.order_id or '—' }}</td>
+                <td style="max-width:320px;line-height:1.5;color:var(--muted)">{{ fb.text }}</td>
+                <td>
+                  <span class="sentiment-badge sentiment-{{ fb.sentiment }}">
+                    {% if fb.sentiment=='positive' %}Positive
+                    {% elif fb.sentiment=='negative' %}Negative
+                    {% else %}Neutral{% endif %}
+                  </span>
+                </td>
+                <td style="font-family:var(--mono);font-size:.75rem;color:var(--dim)">{{ fb.created_at }}</td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr><td colspan="5" class="no-data">No feedback yet.</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: SCHEDULE ═══════════════════════════════════════ -->
+  <div id="panelSchedule" style="display:none">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">Time-Based Menu</div>
+        <div class="panel-sub">Items only appear during their set hours</div>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Item</th><th>Category</th><th>Available Hours</th><th>Set Schedule</th></tr></thead>
+          <tbody>
+            {% for item in menu %}
+            {% set sched = schedules.get(item.item_id) if schedules else none %}
+            <tr id="schedrow-{{ item.item_id }}">
+              <td style="font-family:var(--mono);color:var(--dim);font-size:.78rem">{{ item.item_id }}</td>
+              <td style="font-weight:500">{{ item.item_name.title() }}</td>
+              <td><span class="cat-badge cat-{{ item.category|lower|replace(' ','-') }}">{{ item.category }}</span></td>
+              <td id="schedlabel-{{ item.item_id }}">
+                {% if sched %}
+                  <span class="pill pill-green">{{ '%02d'|format(sched.start_hour) }}:00 – {{ '%02d'|format(sched.end_hour) }}:00</span>
+                {% else %}
+                  <span class="pill pill-gray">All day</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="sched-row">
+                  <select id="sh-{{ item.item_id }}">
+                    {% for h in range(24) %}<option value="{{ h }}" {{ 'selected' if sched and sched.start_hour==h }}>{{ '%02d'|format(h) }}:00</option>{% endfor %}
+                  </select>
+                  <span class="sched-sep">to</span>
+                  <select id="eh-{{ item.item_id }}">
+                    {% for h in range(24) %}<option value="{{ h }}" {{ 'selected' if sched and sched.end_hour==h }}>{{ '%02d'|format(h) }}:00</option>{% endfor %}
+                  </select>
+                  <button class="btn btn-sm btn-success" onclick="saveSchedule({{ item.item_id }})">Set</button>
+                  {% if sched %}
+                  <button class="btn btn-sm btn-secondary" onclick="removeSchedule({{ item.item_id }})">All Day</button>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="sched-info">
+      <strong>Example:</strong> Set Breakfast items (Idli, Dosa) from <strong>06:00 to 11:00</strong>.
+      They will automatically disappear from the menu after 11am and reappear at 6am next day.
+      Items with no schedule are available all day.
+    </div>
+  </div>
+
+</div><!-- /admin-body -->
+
+<!-- ══ MODALS ══════════════════════════════════════════════════ -->
+
+<!-- Add Food -->
+<div class="modal-overlay" id="addModalOverlay" style="display:none" onclick="if(event.target===this)closeAddModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Add Menu Item</div>
+      <button class="modal-close" onclick="closeAddModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Item Name *</label><input type="text" id="addName" placeholder="e.g. Masala Dosa"/></div>
+      <div class="field-row">
+        <div class="field"><label>Category *</label>
+          <select id="addCategory"><option value="">— Select —</option><option>Main Course</option><option>Starter</option><option>Bread</option><option>Breakfast</option><option>Beverages</option><option>Dessert</option></select>
+        </div>
+        <div class="field"><label>Price (₹) *</label><input type="number" id="addPrice" placeholder="120" min="1" step="0.5"/></div>
+      </div>
+      <div class="field"><label>Initial Stock</label><input type="number" id="addStock" value="50" min="0"/></div>
+      <div class="field"><label>Image Filename</label><input type="text" id="addImage" placeholder="e.g. biryani.jpg — put file in static/images/"/></div>
+      <div class="field checkbox-field"><input type="checkbox" id="addAvailable" checked/><label>Available on menu</label></div>
+      <div class="form-error" id="addError"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeAddModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitAdd()">Add Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Food -->
+<div class="modal-overlay" id="editModalOverlay" style="display:none" onclick="if(event.target===this)closeEditModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Edit Item</div>
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+    <input type="hidden" id="editId"/>
+    <div class="modal-body">
+      <div class="field"><label>Item Name *</label><input type="text" id="editName"/></div>
+      <div class="field-row">
+        <div class="field"><label>Category *</label>
+          <select id="editCategory"><option>Main Course</option><option>Starter</option><option>Bread</option><option>Breakfast</option><option>Beverages</option><option>Dessert</option></select>
+        </div>
+        <div class="field"><label>Price (₹) *</label><input type="number" id="editPrice" min="1" step="0.5"/></div>
+      </div>
+      <div class="field"><label>Stock</label><input type="number" id="editStock" min="0"/></div>
+      <div class="field"><label>Image Filename</label><input type="text" id="editImage" placeholder="e.g. biryani.jpg"/></div>
+      <div class="field checkbox-field"><input type="checkbox" id="editAvailable"/><label>Available on menu</label></div>
+      <div class="form-error" id="editError"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Food -->
+<div class="modal-overlay" id="deleteModalOverlay" style="display:none" onclick="if(event.target===this)closeDeleteModal()">
+  <div class="modal modal-sm">
+    <div class="modal-head">
+      <div class="modal-title">Delete Item</div>
+      <button class="modal-close" onclick="closeDeleteModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="delete-warn">Are you sure you want to delete <strong id="deleteItemName"></strong>? This action cannot be undone.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Staff -->
+<div class="modal-overlay" id="addStaffOverlay" style="display:none" onclick="if(event.target===this)closeAddStaff()">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Add Staff Member</div>
+      <button class="modal-close" onclick="closeAddStaff()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Full Name *</label><input type="text" id="sAddName" placeholder="e.g. Ravi Kumar"/></div>
+      <div class="field-row">
+        <div class="field"><label>Username *</label><input type="text" id="sAddUsername" placeholder="e.g. ravi"/></div>
+        <div class="field"><label>Role</label>
+          <select id="sAddRole"><option value="cashier">Cashier</option><option value="manager">Manager</option></select>
+        </div>
+      </div>
+      <div class="field"><label>Password *</label><input type="password" id="sAddPassword" placeholder="Min 6 characters"/></div>
+      <div class="form-error" id="sAddError"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeAddStaff()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitAddStaff()">Add Staff</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Staff -->
+<div class="modal-overlay" id="editStaffOverlay" style="display:none" onclick="if(event.target===this)closeEditStaff()">
+  <div class="modal modal-sm">
+    <div class="modal-head">
+      <div class="modal-title">Edit Staff</div>
+      <button class="modal-close" onclick="closeEditStaff()">✕</button>
+    </div>
+    <input type="hidden" id="sEditId"/>
+    <div class="modal-body">
+      <div class="field"><label>Name</label><input type="text" id="sEditName"/></div>
+      <div class="field"><label>Role</label>
+        <select id="sEditRole"><option value="cashier">Cashier</option><option value="manager">Manager</option></select>
+      </div>
+      <div class="field checkbox-field"><input type="checkbox" id="sEditActive"/><label>Active account</label></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeEditStaff()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitEditStaff()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reset Password -->
+<div class="modal-overlay" id="resetPwdOverlay" style="display:none" onclick="if(event.target===this)closeResetPwd()">
+  <div class="modal modal-sm">
+    <div class="modal-head">
+      <div class="modal-title">Reset Password</div>
+      <button class="modal-close" onclick="closeResetPwd()">✕</button>
+    </div>
+    <input type="hidden" id="resetPwdId"/>
+    <div class="modal-body">
+      <p style="font-size:.83rem;color:var(--muted);margin-bottom:1rem">Resetting password for <strong id="resetPwdName" style="color:var(--text)"></strong></p>
+      <div class="field"><label>New Password *</label><input type="password" id="newPassword" placeholder="Min 6 characters"/></div>
+      <div class="form-error" id="resetPwdError"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeResetPwd()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitResetPwd()">Reset Password</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Staff -->
+<div class="modal-overlay" id="deleteStaffOverlay" style="display:none" onclick="if(event.target===this)closeDeleteStaff()">
+  <div class="modal modal-sm">
+    <div class="modal-head">
+      <div class="modal-title">Remove Staff</div>
+      <button class="modal-close" onclick="closeDeleteStaff()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="delete-warn">Remove <strong id="deleteStaffName"></strong> from staff? This cannot be undone.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeDeleteStaff()">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDeleteStaff()">Remove</button>
+    </div>
+  </div>
+</div>
+
+<!-- NLP Voice Words -->
+<div class="modal-overlay" id="nlpModalOverlay" style="display:none" onclick="if(event.target===this)closeNlpModal()">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <div class="modal-title">Voice Words — <span id="nlpItemTitle" style="color:var(--accent)"></span></div>
+      <button class="modal-close" onclick="closeNlpModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="nlp-hint">These are all the words a customer can say (in Tamil or English) to order this item. Add custom trigger words below.</p>
+      <div class="nlp-list" id="nlpEntriesList"></div>
+      <div style="border-top:1px solid var(--border);padding-top:1rem">
+        <div class="field" style="margin-bottom:.5rem"><label>Add custom voice trigger</label></div>
+        <div class="nlp-add-row">
+          <input type="text" id="nlpNewTrigger" placeholder="e.g. மசாலா தோசை or masala dose"/>
+          <button class="btn btn-primary btn-sm" onclick="addNlpTrigger()">Add</button>
+        </div>
+        <div class="nlp-msg" id="nlpAddMsg"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeNlpModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOAST ════════════════════════════════════════════════════ -->
+<div class="toast" id="adminToast">
+  <div class="toast-dot" id="toastDot"></div>
+  <span id="toastMsg"></span>
+</div>
+
+<!-- ══ SCRIPTS ══════════════════════════════════════════════════ -->
+<script>
+const stats = {{ stats | tojson }} || {};
+const pal   = ["#e8a045","#3ecf8e","#4d9eff","#a78bfa","#f46b6b","#2dd4bf","#f97316","#06b6d4"];
+
+/* ── Safe menu lookup — fixes Edit/Voice/Delete buttons ─────── */
+const menuItems = {
+  {% for item in menu %}
+  {{ item.item_id }}: {
+    id:       {{ item.item_id }},
+    name:     {{ item.item_name.title() | tojson }},
+    nameLower:{{ item.item_name | tojson }},
+    category: {{ item.category | tojson }},
+    price:    {{ item.price }},
+    stock:    {{ item.get('stock', 50) }},
+    available:{{ item.is_available | tojson }},
+    image:    {{ (item.image if item.image is defined and item.image else '') | tojson }}
+  },
+  {% endfor %}
+};
+
+/* ── Tabs ──────────────────────────────────────────────────── */
+function switchTab(tab) {
+  ["Sales","Food","Inv","Staff","Feedback","Schedule"].forEach(t => {
+    const p = document.getElementById("panel"+t);
+    const b = document.getElementById("tab"+t);
+    if(p) p.style.display = t===tab ? "block" : "none";
+    if(b) b.classList.toggle("active", t===tab);
+  });
+}
+
+/* ── Charts ────────────────────────────────────────────────── */
+Chart.defaults.color = "#6b7591";
+Chart.defaults.borderColor = "#252b3b";
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+
+// Safe chart initialization with defensive checks
+const dailyData = stats.daily_stats || [];
+new Chart(document.getElementById("dailyChart"), {
+  type:"bar",
+  data:{
+    labels: dailyData.length ? dailyData.map(d=>d.day) : ["No data"],
+    datasets:[
+      {label:"Orders",data:dailyData.length?dailyData.map(d=>d.count):[0],
+       backgroundColor:"rgba(77,158,255,0.7)",borderRadius:5,yAxisID:"y"},
+      {label:"Revenue (₹)",data:dailyData.length?dailyData.map(d=>d.revenue):[0],
+       type:"line",borderColor:"#e8a045",backgroundColor:"rgba(232,160,69,0.08)",
+       borderWidth:2,pointBackgroundColor:"#e8a045",pointRadius:4,tension:0.4,yAxisID:"y1"}
+    ]
+  },
+  options:{
+    responsive:true,interaction:{mode:"index",intersect:false},
+    plugins:{legend:{position:"top",labels:{boxWidth:12,padding:16}}},
+    scales:{
+      x:{grid:{color:"rgba(255,255,255,0.04)"}},
+      y:{type:"linear",position:"left",title:{display:true,text:"Orders"},beginAtZero:true,grid:{color:"rgba(255,255,255,0.04)"}},
+      y1:{type:"linear",position:"right",title:{display:true,text:"Revenue (₹)"},beginAtZero:true,grid:{drawOnChartArea:false}}
+    }
+  }
+});
+
+const topItems = stats.top_items || [];
+new Chart(document.getElementById("topItemsChart"),{
+  type:"doughnut",
+  data:{
+    labels: topItems.map(i=>i.item_name)||["No data"],
+    datasets:[{data:topItems.map(i=>i.total_qty)||[1],
+      backgroundColor:pal,borderWidth:0,hoverOffset:6}]
+  },
+  options:{responsive:true,plugins:{legend:{position:"bottom",labels:{font:{size:11},padding:12,boxWidth:10}}}}
+});
+
+const itemRev = stats.item_revenue || [];
+new Chart(document.getElementById("revenueChart"),{
+  type:"bar",
+  data:{
+    labels: itemRev.map(i=>i.item_name)||["No data"],
+    datasets:[{label:"Revenue (₹)",data:itemRev.map(i=>i.revenue)||[0],
+      backgroundColor:itemRev.map((_,i)=>pal[i%pal.length]),
+      borderRadius:5,borderSkipped:false}]
+  },
+  options:{
+    responsive:true,plugins:{legend:{display:false}},
+    scales:{
+      x:{grid:{color:"rgba(255,255,255,0.04)"}},
+      y:{beginAtZero:true,title:{display:true,text:"Revenue (₹)"},grid:{color:"rgba(255,255,255,0.04)"}}
+    }
+  }
+});
+
+/* ── Toast ─────────────────────────────────────────────────── */
+let toastTmr=null;
+function showToast(msg,type="success"){
+  const t   = document.getElementById("adminToast");
+  const dot = document.getElementById("toastDot");
+  const colors = {success:"#3ecf8e",error:"#f46b6b",warning:"#e8a045",info:"#4d9eff"};
+  const c = colors[type]||colors.success;
+  dot.style.background = c;
+  t.style.borderColor  = c+"44";
+  document.getElementById("toastMsg").textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTmr);
+  toastTmr = setTimeout(()=>t.classList.remove("show"), 3500);
+}
+function showFormError(id,msg){const e=document.getElementById(id);e.textContent=msg;e.style.display="block";}
+
+/* ── Utility ────────────────────────────────────────────────── */
+function post(url,data={}){
+  return fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)}).then(r=>r.json());
+}
+
+/* ── Food management ────────────────────────────────────────── */
+function filterTable(){
+  const q   = document.getElementById("fmSearch").value.toLowerCase();
+  const cat = document.getElementById("fmCategory").value.toLowerCase();
+  const st  = document.getElementById("fmStatus").value.toLowerCase();
+  let vis=0;
+  document.querySelectorAll("#fmTableBody tr").forEach(row=>{
+    const match = (!q||row.dataset.name.toLowerCase().includes(q))&&(!cat||row.dataset.category.toLowerCase()===cat)&&(!st||row.dataset.available===st);
+    row.style.display=match?"":"none";
+    if(match)vis++;
+  });
+  document.getElementById("fmCount").textContent=vis+" item(s)";
+}
+function openAddModal(){
+  ["addName","addPrice","addImage"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("addCategory").value="";
+  document.getElementById("addStock").value="50";
+  document.getElementById("addAvailable").checked=true;
+  document.getElementById("addError").style.display="none";
+  document.getElementById("addModalOverlay").style.display="flex";
+}
+function closeAddModal(){document.getElementById("addModalOverlay").style.display="none";}
+function submitAdd(){
+  const name=document.getElementById("addName").value.trim();
+  const cat=document.getElementById("addCategory").value;
+  const price=parseFloat(document.getElementById("addPrice").value);
+  const stock=parseInt(document.getElementById("addStock").value)||50;
+  const avail=document.getElementById("addAvailable").checked;
+  const image=document.getElementById("addImage").value.trim();
+  if(!name||!cat||isNaN(price)||price<=0){showFormError("addError","Please fill all required fields.");return;}
+  post("/admin/menu/add",{item_name:name,category:cat,price,stock,is_available:avail,image}).then(d=>{
+    if(d.status==="success"){showToast(d.message,"success");closeAddModal();setTimeout(()=>location.reload(),700);}
+    else showFormError("addError",d.message);
+  });
+}
+function openEditModal(id){
+  const item=menuItems[id];
+  if(!item){showToast("Item not found.","error");return;}
+  document.getElementById("editId").value=id;
+  document.getElementById("editName").value=item.name;
+  document.getElementById("editCategory").value=item.category;
+  document.getElementById("editPrice").value=item.price;
+  document.getElementById("editStock").value=item.stock;
+  document.getElementById("editAvailable").checked=item.available;
+  document.getElementById("editImage").value=item.image||"";
+  document.getElementById("editError").style.display="none";
+  document.getElementById("editModalOverlay").style.display="flex";
+}
+function closeEditModal(){document.getElementById("editModalOverlay").style.display="none";}
+function submitEdit(){
+  const id=parseInt(document.getElementById("editId").value);
+  const name=document.getElementById("editName").value.trim();
+  const cat=document.getElementById("editCategory").value;
+  const price=parseFloat(document.getElementById("editPrice").value);
+  const stock=parseInt(document.getElementById("editStock").value)||0;
+  const avail=document.getElementById("editAvailable").checked;
+  const image=document.getElementById("editImage").value.trim();
+  if(!name||!cat||isNaN(price)||price<=0){showFormError("editError","Please fill all fields.");return;}
+  post(`/admin/menu/edit/${id}`,{item_name:name,category:cat,price,stock,is_available:avail,image}).then(d=>{
+    if(d.status==="success"){showToast(d.message,"success");closeEditModal();setTimeout(()=>location.reload(),700);}
+    else showFormError("editError",d.message);
+  });
+}
+function toggleItem(id){
+  post(`/admin/menu/toggle/${id}`).then(d=>{
+    if(d.status==="success"){
+      const pill=document.getElementById("pill-"+id);
+      const btn=document.getElementById("toggleBtn-"+id);
+      const row=document.getElementById("row-"+id);
+      if(d.is_available){
+        pill.textContent="Available";pill.className="pill pill-green";
+        btn.textContent="Disable";row.dataset.available="available";
+      }else{
+        pill.textContent="Unavailable";pill.className="pill pill-red";
+        btn.textContent="Enable";row.dataset.available="unavailable";
+      }
+      showToast(d.message,"success");
+    }
+  });
+}
+let pendingDeleteId=null;
+function deleteItem(id){
+  const item=menuItems[id];
+  if(!item){showToast("Item not found.","error");return;}
+  pendingDeleteId=id;
+  document.getElementById("deleteItemName").textContent=item.name;
+  document.getElementById("deleteModalOverlay").style.display="flex";
+}
+function closeDeleteModal(){document.getElementById("deleteModalOverlay").style.display="none";pendingDeleteId=null;}
+function confirmDelete(){
+  if(!pendingDeleteId)return;
+  post(`/admin/menu/delete/${pendingDeleteId}`).then(d=>{
+    closeDeleteModal();
+    if(d.status==="success"){showToast(d.message,"warning");const row=document.getElementById("row-"+pendingDeleteId);if(row)row.remove();pendingDeleteId=null;}
+  });
+}
+
+/* ── Inventory ──────────────────────────────────────────────── */
+function restockItem(id){
+  const qty=parseInt(document.getElementById("restock-"+id).value)||50;
+  post(`/admin/menu/restock/${id}`,{qty}).then(d=>{
+    if(d.status==="success"){
+      const el=document.getElementById("inv-stock-"+id);
+      if(el)el.textContent=d.stock;
+      showToast(d.message,"success");
+    }else showToast(d.message,"error");
+  });
+}
+
+/* ── Staff ──────────────────────────────────────────────────── */
+function openAddStaffModal(){
+  ["sAddName","sAddUsername","sAddPassword"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("sAddRole").value="cashier";
+  document.getElementById("sAddError").style.display="none";
+  document.getElementById("addStaffOverlay").style.display="flex";
+}
+function closeAddStaff(){document.getElementById("addStaffOverlay").style.display="none";}
+function submitAddStaff(){
+  const name=document.getElementById("sAddName").value.trim();
+  const username=document.getElementById("sAddUsername").value.trim();
+  const password=document.getElementById("sAddPassword").value.trim();
+  const role=document.getElementById("sAddRole").value;
+  if(!name||!username||!password){showFormError("sAddError","All fields required.");return;}
+  post("/admin/staff/add",{name,username,password,role}).then(d=>{
+    if(d.status==="success"){showToast(d.message,"success");closeAddStaff();setTimeout(()=>location.reload(),700);}
+    else showFormError("sAddError",d.message);
+  });
+}
+function openEditStaff(id,name,role,active){
+  document.getElementById("sEditId").value=id;
+  document.getElementById("sEditName").value=name;
+  document.getElementById("sEditRole").value=role;
+  document.getElementById("sEditActive").checked=!!active;
+  document.getElementById("editStaffOverlay").style.display="flex";
+}
+function closeEditStaff(){document.getElementById("editStaffOverlay").style.display="none";}
+function submitEditStaff(){
+  const id=parseInt(document.getElementById("sEditId").value);
+  const name=document.getElementById("sEditName").value.trim();
+  const role=document.getElementById("sEditRole").value;
+  const active=document.getElementById("sEditActive").checked;
+  post(`/admin/staff/edit/${id}`,{name,role,is_active:active}).then(d=>{
+    if(d.status==="success"){showToast(d.message,"success");closeEditStaff();setTimeout(()=>location.reload(),700);}
+  });
+}
+let pendingStaffDeleteId=null;
+function deleteStaff(id,name){pendingStaffDeleteId=id;document.getElementById("deleteStaffName").textContent=name;document.getElementById("deleteStaffOverlay").style.display="flex";}
+function closeDeleteStaff(){document.getElementById("deleteStaffOverlay").style.display="none";pendingStaffDeleteId=null;}
+function confirmDeleteStaff(){
+  if(!pendingStaffDeleteId)return;
+  post(`/admin/staff/delete/${pendingStaffDeleteId}`).then(d=>{
+    closeDeleteStaff();
+    if(d.status==="success"){showToast(d.message,"warning");const row=document.getElementById("srow-"+pendingStaffDeleteId);if(row)row.remove();pendingStaffDeleteId=null;}
+    else showToast(d.message,"error");
+  });
+}
+function openResetPwd(id,name){
+  document.getElementById("resetPwdId").value=id;
+  document.getElementById("resetPwdName").textContent=name;
+  document.getElementById("newPassword").value="";
+  document.getElementById("resetPwdError").style.display="none";
+  document.getElementById("resetPwdOverlay").style.display="flex";
+}
+function closeResetPwd(){document.getElementById("resetPwdOverlay").style.display="none";}
+function submitResetPwd(){
+  const id=parseInt(document.getElementById("resetPwdId").value);
+  const pw=document.getElementById("newPassword").value.trim();
+  if(pw.length<6){showFormError("resetPwdError","Min 6 characters required.");return;}
+  post(`/admin/staff/reset-password/${id}`,{password:pw}).then(d=>{
+    if(d.status==="success"){showToast("Password reset successfully.","success");closeResetPwd();}
+    else showFormError("resetPwdError",d.message);
+  });
+}
+
+/* ── Schedule ───────────────────────────────────────────────── */
+function saveSchedule(id){
+  const s=parseInt(document.getElementById("sh-"+id).value);
+  const e=parseInt(document.getElementById("eh-"+id).value);
+  post("/admin/schedule/set",{item_id:id,start_hour:s,end_hour:e}).then(d=>{
+    if(d.status==="success"){
+      showToast("Schedule saved.","success");
+      document.getElementById("schedlabel-"+id).innerHTML=
+        `<span class="pill pill-green">${String(s).padStart(2,"0")}:00 – ${String(e).padStart(2,"0")}:00</span>`;
+    }
+  });
+}
+function removeSchedule(id){
+  post("/admin/schedule/delete/"+id).then(d=>{
+    if(d.status==="success"){
+      showToast("Set to all day.","info");
+      document.getElementById("schedlabel-"+id).innerHTML=
+        `<span class="pill pill-gray">All day</span>`;
+    }
+  });
+}
+
+/* ── NLP ────────────────────────────────────────────────────── */
+let currentNlpItem=null;
+function openNlpModal(id){
+  const item=menuItems[id];
+  if(!item){showToast("Item not found.","error");return;}
+  currentNlpItem=item.nameLower;
+  document.getElementById("nlpItemTitle").textContent=item.name;
+  document.getElementById("nlpNewTrigger").value="";
+  document.getElementById("nlpAddMsg").style.display="none";
+  const list=document.getElementById("nlpEntriesList");
+  list.innerHTML='<span style="color:var(--muted);font-size:.8rem">Loading…</span>';
+  document.getElementById("nlpModalOverlay").style.display="flex";
+  fetch(`/admin/nlp/entries/${encodeURIComponent(currentNlpItem)}`).then(r=>r.json()).then(d=>{
+    const entries=Object.keys(d.entries||{});
+    if(entries.length===0){list.innerHTML='<span style="color:var(--muted);font-size:.8rem">No voice triggers yet.</span>';return;}
+    list.innerHTML=entries.map(k=>`<span class="nlp-chip">${k}</span>`).join("");
+  }).catch(()=>{list.innerHTML='<span style="color:var(--red);font-size:.8rem">Failed to load.</span>';});
+}
+function closeNlpModal(){document.getElementById("nlpModalOverlay").style.display="none";currentNlpItem=null;}
+function addNlpTrigger(){
+  const trigger=document.getElementById("nlpNewTrigger").value.trim();
+  if(!trigger)return;
+  const msg=document.getElementById("nlpAddMsg");
+  fetch("/admin/nlp/add",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({trigger,target:currentNlpItem})}).then(r=>r.json()).then(d=>{
+    msg.style.display="block";
+    msg.style.color=d.added&&d.added.length?"var(--green)":"var(--muted)";
+    msg.textContent=d.added&&d.added.length?"Added: "+d.added.join(", "):"Already exists or could not add.";
+    document.getElementById("nlpNewTrigger").value="";
+    if(currentNlpItem)openNlpModal(currentNlpItem);
+  });
+}
+
+/* ── Demand forecast ────────────────────────────────────────── */
+(function buildForecast(){
+  const vel = {{ stats.today_velocity | tojson }} || [];
+  if(!vel||!vel.length)return;
+  const now=new Date().getHours()||1;
+  const rows=vel.map(v=>{
+    const rate=(v.qty_today/now).toFixed(1);
+    const forecast=Math.round((v.qty_today/now)*(24-now));
+    return `<tr>
+      <td style="font-weight:500">${v.item_name}</td>
+      <td style="font-family:var(--mono);color:var(--blue)">${v.qty_today}</td>
+      <td style="font-family:var(--mono);color:var(--muted)">${rate}/hr</td>
+      <td style="font-family:var(--mono);font-weight:600;color:var(--accent)">${forecast}</td>
+    </tr>`;
+  }).join("");
+  const wrap=document.createElement("div");
+  wrap.className="table-card";
+  wrap.style.marginTop="1rem";
+  wrap.innerHTML=`
+    <div class="table-card-head"><div class="table-card-title">Demand Forecast — Rest of Today</div></div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Item</th><th>Sold Today</th><th>Rate</th><th>Est. Remaining Demand</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div class="fm-footer">Based on current order velocity × remaining hours today.</div>`;
+  const salesPanel=document.getElementById("panelSales");
+  if(salesPanel)salesPanel.appendChild(wrap);
+})();
+</script>
+</body>
+</html>

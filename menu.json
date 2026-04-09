@@ -1,0 +1,212 @@
+[
+  {
+    "item_id": 1,
+    "item_name": "paneer butter masala",
+    "category": "Main Course",
+    "price": 180.0,
+    "is_available": true,
+    "stock": 182,
+    "image": "panner.jpg"
+  },
+  {
+    "item_id": 2,
+    "item_name": "naan",
+    "category": "Bread",
+    "price": 40.0,
+    "is_available": true,
+    "stock": 47,
+    "image": "naan.jpg"
+  },
+  {
+    "item_id": 3,
+    "item_name": "biryani",
+    "category": "Main Course",
+    "price": 220.0,
+    "is_available": true,
+    "stock": 93,
+    "image": "biriyani.jpg"
+  },
+  {
+    "item_id": 4,
+    "item_name": "idli",
+    "category": "Breakfast",
+    "price": 60.0,
+    "is_available": true,
+    "stock": 44,
+    "image": "idli.jpg"
+  },
+  {
+    "item_id": 5,
+    "item_name": "dosa",
+    "category": "Breakfast",
+    "price": 80.0,
+    "is_available": true,
+    "stock": 46,
+    "image": "dosa.jpg"
+  },
+  {
+    "item_id": 6,
+    "item_name": "samosa",
+    "category": "Starter",
+    "price": 30.0,
+    "is_available": true,
+    "stock": 47,
+    "image": "samosa.jpg"
+  },
+  {
+    "item_id": 7,
+    "item_name": "dal tadka",
+    "category": "Main Course",
+    "price": 140.0,
+    "is_available": true,
+    "stock": 32,
+    "image": "daltakda.jpg"
+  },
+  {
+    "item_id": 8,
+    "item_name": "fried rice",
+    "category": "Main Course",
+    "price": 160.0,
+    "is_available": true,
+    "stock": 37,
+    "image": "friedrice.jpg"
+  },
+  {
+    "item_id": 9,
+    "item_name": "masala chai",
+    "category": "Beverages",
+    "price": 30.0,
+    "is_available": true,
+    "stock": 49,
+    "image": "masalachai.jpg"
+  },
+  {
+    "item_id": 10,
+    "item_name": "mango lassi",
+    "category": "Beverages",
+    "price": 70.0,
+    "is_available": true,
+    "stock": 47,
+    "image": "mangolassi.jpg"
+  },
+  {
+    "item_id": 11,
+    "item_name": "gulab jamun",
+    "category": "Dessert",
+    "price": 60,
+    "is_available": true,
+    "stock": 47
+  },
+  {
+    "item_id": 12,
+    "item_name": "roti",
+    "category": "Bread",
+    "price": 20,
+    "is_available": true,
+    "stock": 47
+  },
+  {
+    "item_id": 13,
+    "item_name": "chicken curry",
+    "category": "Main Course",
+    "price": 260.0,
+    "is_available": true,
+    "stock": 44,
+    "image": "chickencurry.jpg"
+  },
+  {
+    "item_id": 14,
+    "item_name": "veg soup",
+    "category": "Starter",
+    "price": 90,
+    "is_available": true,
+    "stock": 50
+  },
+  {
+    "item_id": 15,
+    "item_name": "ice cream",
+    "category": "Dessert",
+    "price": 80,
+    "is_available": true,
+    "stock": 46
+  },
+  {
+    "item_id": 16,
+    "item_name": "chicken 65",
+    "category": "Starter",
+    "price": 80.0,
+    "stock": 47,
+    "is_available": true
+  },
+  {
+    "item_id": 17,
+    "item_name": "puri",
+    "category": "Bread",
+    "price": 60.0,
+    "stock": 47,
+    "is_available": true,
+    "image": "puri.jpg"
+  },
+  {
+    "item_id": 18,
+    "item_name": "chapati",
+    "category": "Breakfast",
+    "price": 20.0,
+    "stock": 49,
+    "is_available": true,
+    "image": "chapati.jpg"
+  },
+  {
+    "item_id": 21,
+    "item_name": "mutton biryani",
+    "category": "Main Course",
+    "price": 120.0,
+    "stock": 43,
+    "is_available": true,
+    "image": "muttonbiryani.jpg"
+  },
+  {
+    "item_id": 22,
+    "item_name": "mutton",
+    "category": "Starter",
+    "price": 100.0,
+    "stock": 49,
+    "is_available": true
+  },
+  {
+    "item_id": 23,
+    "item_name": "veg samosa",
+    "category": "Main Course",
+    "price": 10.0,
+    "stock": 50,
+    "is_available": true,
+    "image": "vegsamosa.jpg"
+  },
+  {
+    "item_id": 24,
+    "item_name": "veg meals",
+    "category": "Main Course",
+    "price": 100.0,
+    "stock": 48,
+    "is_available": true,
+    "image": "vegmeals.jpg"
+  },
+  {
+    "item_id": 25,
+    "item_name": "mandi",
+    "category": "Bread",
+    "price": 10.0,
+    "stock": 110,
+    "is_available": true,
+    "image": ""
+  },
+  {
+    "item_id": 26,
+    "item_name": "parotta",
+    "category": "Main Course",
+    "price": 15.0,
+    "stock": 50,
+    "is_available": true,
+    "image": "parotta.jpg"
+  }
+]
